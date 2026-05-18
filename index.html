@@ -845,6 +845,137 @@ function startTimer() {
     if(state.timerSec<=0) { clearInterval(state.timerInt); showNotif('Waktu habis!','warn'); selesai(); }
   },1000);
 }
+
+// ═══ DEBUG PANEL ══════════════════════════════
+const debugLogs = [];
+function dbg(msg, color='#8a90a0') {
+  const time = new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  debugLogs.unshift({ time, msg, color });
+  if(debugLogs.length > 30) debugLogs.pop();
+  const el = document.getElementById('dbg-list');
+  if(el) el.innerHTML = debugLogs.map(l=>
+    `<div style="border-bottom:1px solid #2a2f3d;padding:4px 0;font-size:11px;">
+      <span style="color:#555;margin-right:6px;">${l.time}</span>
+      <span style="color:${l.color};">${l.msg}</span>
+    </div>`).join('');
+}
+
+// Override console.log untuk capture ke debug panel
+const _origLog = console.log.bind(console);
+const _origWarn = console.warn.bind(console);
+const _origErr = console.error.bind(console);
+console.log = (...a) => { _origLog(...a); dbg(a.join(' '), '#8a90a0'); };
+console.warn = (...a) => { _origWarn(...a); dbg('⚠ '+a.join(' '), '#e8c97a'); };
+console.error = (...a) => { _origErr(...a); dbg('✗ '+a.join(' '), '#e05c5c'); };
+
+// ═══ WS HEARTBEAT + AUTO-RECONNECT ═══════════
+let wsHeartbeatInt = null;
+let wsReconnectTimeout = null;
+let wsReady = false;
+
+function startHeartbeat() {
+  clearInterval(wsHeartbeatInt);
+  wsHeartbeatInt = setInterval(() => {
+    if(ws && ws.readyState === WebSocket.OPEN) {
+      ws.send(JSON.stringify({ type: 'ping' }));
+    }
+  }, 25000); // kirim ping tiap 25 detik agar WS tidak di-drop
+}
+
+// Patch connectWS dengan auto-reconnect
+const _origConnectWS = connectWS;
+function connectWS(onOpen) {
+  wsReady = false;
+  ws = new WebSocket(SERVER_URL);
+  dbg('WS connecting...', '#5c9de0');
+
+  ws.onopen = () => {
+    wsReady = true;
+    dbg('WS connected ✓', '#5ce0a0');
+    startHeartbeat();
+    onOpen && onOpen();
+    // Simpan onOpen untuk reconnect
+    ws._onOpen = onOpen;
+  };
+
+  ws.onmessage = (e) => {
+    const msg = JSON.parse(e.data);
+    if(msg.type === 'pong') return; // abaikan pong
+    handleMessage(msg);
+  };
+
+  ws.onclose = (e) => {
+    wsReady = false;
+    clearInterval(wsHeartbeatInt);
+    dbg(`WS closed (code:${e.code}) — reconnect 3s...`, '#e05c5c');
+    updateConnStatus(false);
+    // Auto reconnect setelah 3 detik kalau masih di halaman tes/admin
+    clearTimeout(wsReconnectTimeout);
+    wsReconnectTimeout = setTimeout(() => {
+      if(ws._onOpen) {
+        dbg('WS reconnecting...', '#e8c97a');
+        connectWS(ws._onOpen);
+      }
+    }, 3000);
+  };
+
+  ws.onerror = (e) => {
+    dbg('WS error!', '#e05c5c');
+  };
+}
+</script>
+
+<!-- ═══ DEBUG PANEL (tampil di semua halaman) ═══ -->
+<div id="debug-panel" style="
+  position:fixed; bottom:0; left:0; right:0;
+  background:#0d0f14; border-top:2px solid #e8c97a;
+  z-index:9999; font-family:monospace;
+  max-height:200px; overflow:hidden;
+  transition: max-height 0.3s;
+">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 12px;background:#13161d;cursor:pointer;" onclick="toggleDbg()">
+    <span style="font-size:12px;color:#e8c97a;font-weight:bold;">🔧 DEBUG LOG</span>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <span id="dbg-ws" style="font-size:11px;color:#8a90a0;">WS: —</span>
+      <span id="dbg-rtc" style="font-size:11px;color:#8a90a0;">RTC: —</span>
+      <span style="font-size:11px;color:#555;" id="dbg-toggle">▼ buka</span>
+    </div>
+  </div>
+  <div id="dbg-body" style="display:none;padding:8px 12px;max-height:160px;overflow-y:auto;">
+    <div id="dbg-list" style="color:#8a90a0;"></div>
+  </div>
+</div>
+
+<script>
+let dbgOpen = false;
+function toggleDbg() {
+  dbgOpen = !dbgOpen;
+  document.getElementById('dbg-body').style.display = dbgOpen ? 'block' : 'none';
+  document.getElementById('dbg-toggle').textContent = dbgOpen ? '▲ tutup' : '▼ buka';
+  document.getElementById('debug-panel').style.maxHeight = dbgOpen ? '220px' : '32px';
+}
+
+// Update status badge di debug bar
+setInterval(() => {
+  const wsEl = document.getElementById('dbg-ws');
+  const rtcEl = document.getElementById('dbg-rtc');
+  if(wsEl) {
+    const ok = ws && ws.readyState === WebSocket.OPEN;
+    wsEl.textContent = 'WS: ' + (ok ? '✓' : '✗');
+    wsEl.style.color = ok ? '#5ce0a0' : '#e05c5c';
+  }
+  if(rtcEl) {
+    // Cek state peer (peserta atau admin)
+    let rtcState = '—';
+    if(peerConn) rtcState = peerConn.connectionState || '—';
+    else {
+      const peers = Object.values(adminPeers);
+      if(peers.length) rtcState = peers[0].connectionState || '—';
+    }
+    rtcEl.textContent = 'RTC: ' + rtcState;
+    rtcEl.style.color = rtcState==='connected' ? '#5ce0a0' : rtcState==='failed' ? '#e05c5c' : '#e8c97a';
+  }
+}, 1000);
 </script>
 </body>
 </html>

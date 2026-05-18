@@ -99,6 +99,8 @@ wss.on('connection', (ws) => {
       if (adminWs) send(adminWs, { type: 'event-log', from: info.id, nama: info.nama, event: msg.event, level: msg.level || 'info' });
     }
 
+    if (type === 'ping') { send(ws, { type: 'pong' }); return; }
+
     if (type === 'hasil-tes') {
       const info = clients.get(ws);
       if (!info) return;
