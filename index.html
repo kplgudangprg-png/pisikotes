@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PsikoTest Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0d0f14; --bg2:#13161d; --bg3:#1a1e28; --border:#2a2f3d;
+  --accent:#e8c97a; --accent2:#c4a55a; --text:#e8eaf0; --text2:#8a90a0;
+  --red:#e05c5c; --green:#5ce0a0; --blue:#5c9de0; --radius:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.page{display:none;min-height:100vh;}
+.page.active{display:flex;}
+.center{align-items:center;justify-content:center;flex-direction:column;padding:40px 24px;}
+
+/* Landing */
+#pg-landing::before{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(232,201,122,.08) 0%,transparent 70%);top:-100px;right:-100px;border-radius:50%;pointer-events:none;}
+#pg-landing{position:relative;overflow:hidden;}
+.logo-badge{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--border);border-radius:100px;padding:6px 18px 6px 6px;margin-bottom:48px;}
+.logo-dot{width:28px;height:28px;background:var(--accent);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.logo-badge span{font-size:13px;font-weight:600;letter-spacing:.05em;color:var(--text2);}
+h1{font-family:'Playfair Display',serif;font-size:clamp(42px,7vw,80px);font-weight:900;line-height:1.05;text-align:center;max-width:700px;margin-bottom:20px;}
+h1 em{font-style:normal;color:var(--accent);}
+.subtitle{color:var(--text2);font-size:17px;text-align:center;max-width:480px;line-height:1.6;margin-bottom:48px;}
+.role-cards{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:700px;width:100%;}
+.role-card{flex:1;min-width:260px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:28px 24px;cursor:pointer;transition:all .25s;position:relative;overflow:hidden;}
+.role-card:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.4);}
+.role-card .icon{font-size:32px;margin-bottom:14px;}
+.role-card h3{font-size:18px;font-weight:600;margin-bottom:6px;}
+.role-card p{font-size:13px;color:var(--text2);line-height:1.5;}
+.arrow{position:absolute;bottom:20px;right:20px;color:var(--accent);font-size:20px;opacity:0;transition:opacity .2s,transform .2s;}
+.role-card:hover .arrow{opacity:1;transform:translateX(4px);}
+
+/* Form card */
+.form-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:48px 40px;width:100%;max-width:460px;}
+.form-card h2{font-family:'Playfair Display',serif;font-size:30px;font-weight:700;margin-bottom:6px;}
+.form-card .sub{color:var(--text2);font-size:14px;margin-bottom:32px;}
+label{display:block;font-size:12px;font-weight:600;letter-spacing:.06em;color:var(--text2);margin-bottom:6px;text-transform:uppercase;}
+input,select{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px 16px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:15px;outline:none;transition:border-color .2s;margin-bottom:20px;}
+input:focus,select:focus{border-color:var(--accent);}
+select option{background:var(--bg3);}
+.btn{width:100%;background:var(--accent);color:#0d0f14;border:none;border-radius:8px;padding:14px;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;letter-spacing:.02em;}
+.btn:hover{background:var(--accent2);transform:translateY(-1px);}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
+.btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text2);margin-top:10px;}
+.btn-ghost:hover{border-color:var(--text2);background:transparent;transform:none;}
+.btn-danger{background:var(--red);color:#fff;}
+.btn-danger:hover{background:#c04040;}
+
+/* Connecting */
+.connecting{text-align:center;padding:20px 0;}
+.spinner{width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 16px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* Tes page */
+#pg-tes{flex-direction:column;}
+.tes-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.cam-pip{width:80px;height:56px;border-radius:8px;overflow:hidden;border:2px solid var(--accent);position:relative;background:var(--bg3);}
+.cam-pip video{width:100%;height:100%;object-fit:cover;}
+.cam-label{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:var(--red);font-size:8px;font-weight:700;letter-spacing:.08em;padding:1px 4px;border-radius:2px;}
+.timer-box{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-family:'DM Mono',monospace;font-size:22px;color:var(--accent);letter-spacing:.05em;}
+.timer-box.urgent{color:var(--red);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.progress-wrap{padding:16px 28px;}
+.progress-info{display:flex;justify-content:space-between;font-size:13px;color:var(--text2);margin-bottom:8px;}
+.progress-bar{height:4px;background:var(--bg3);border-radius:4px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent2),var(--accent));border-radius:4px;transition:width .4s ease;}
+.question-area{flex:1;padding:32px 28px;max-width:700px;width:100%;margin:0 auto;}
+.q-meta{font-size:12px;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px;}
+.q-text{font-family:'Playfair Display',serif;font-size:22px;line-height:1.5;margin-bottom:32px;font-weight:400;}
+.options{display:flex;flex-direction:column;gap:12px;}
+.option{background:var(--bg2);border:1.5px solid var(--border);border-radius:10px;padding:16px 20px;cursor:pointer;display:flex;align-items:center;gap:14px;transition:all .18s;font-size:15px;}
+.option:hover{border-color:var(--accent);background:var(--bg3);}
+.option.selected{border-color:var(--accent);background:rgba(232,201,122,.08);}
+.option-letter{width:30px;height:30px;border-radius:6px;background:var(--bg3);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:13px;font-weight:600;flex-shrink:0;transition:all .18s;}
+.option.selected .option-letter{background:var(--accent);color:#0d0f14;border-color:var(--accent);}
+.nav-btns{padding:20px 28px;max-width:700px;width:100%;margin:0 auto;display:flex;gap:12px;}
+.nav-btns .btn{width:auto;flex:1;}
+
+/* Admin page */
+#pg-admin{flex-direction:column;}
+.admin-header{background:var(--bg2);border-bottom:1px solid var(--border);padding:16px 28px;display:flex;align-items:center;justify-content:space-between;}
+.admin-header h2{font-family:'Playfair Display',serif;font-size:22px;}
+.status-badge{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:var(--green);background:rgba(92,224,160,.1);border:1px solid rgba(92,224,160,.3);border-radius:100px;padding:4px 12px;}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+.admin-body{flex:1;display:grid;grid-template-columns:1fr 360px;gap:0;overflow:hidden;}
+@media(max-width:768px){.admin-body{grid-template-columns:1fr;}}
+.admin-main{padding:28px;overflow-y:auto;}
+.admin-sidebar{background:var(--bg2);border-left:1px solid var(--border);padding:28px;overflow-y:auto;}
+.section-title{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text2);margin-bottom:16px;}
+.cam-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;}
+.cam-feed{background:var(--bg3);border:1px solid var(--border);border-radius:10px;overflow:hidden;position:relative;aspect-ratio:4/3;}
+.cam-feed video{width:100%;height:100%;object-fit:cover;}
+.cam-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.8));padding:8px 10px;display:flex;align-items:center;justify-content:space-between;}
+.cam-name{font-size:12px;font-weight:600;}
+.cam-badge{font-size:10px;padding:2px 8px;border-radius:100px;font-weight:700;}
+.live{background:rgba(224,92,92,.3);color:var(--red);border:1px solid var(--red);}
+.offline{background:rgba(138,144,160,.2);color:var(--text2);border:1px solid var(--border);}
+.rec-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 1s infinite;display:inline-block;margin-right:4px;}
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:18px 16px;}
+.stat-card .val{font-family:'DM Mono',monospace;font-size:28px;font-weight:500;color:var(--accent);margin-bottom:4px;}
+.stat-card .lbl{font-size:12px;color:var(--text2);}
+.log-list{display:flex;flex-direction:column;gap:8px;max-height:400px;overflow-y:auto;}
+.log-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13px;display:flex;gap:10px;align-items:flex-start;}
+.log-time{font-family:'DM Mono',monospace;font-size:11px;color:var(--text2);flex-shrink:0;margin-top:2px;}
+.log-warn{border-left:3px solid var(--red);}
+.log-ok{border-left:3px solid var(--green);}
+.log-info{border-left:3px solid var(--blue);}
+.peserta-item{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;font-size:13px;}
+.peserta-item .name{font-weight:600;margin-bottom:4px;}
+.peserta-item .detail{color:var(--text2);font-size:12px;}
+.pp-bar{height:3px;background:var(--bg);border-radius:3px;margin-top:8px;overflow:hidden;}
+.pp-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .5s;}
+
+/* Hasil */
+#pg-hasil{align-items:center;justify-content:center;padding:40px 24px;}
+.hasil-card{background:var(--bg2);border:1px solid var(--border);border-radius:20px;padding:48px 40px;max-width:500px;width:100%;text-align:center;}
+.hasil-icon{font-size:56px;margin-bottom:20px;}
+.hasil-card h2{font-family:'Playfair Display',serif;font-size:28px;margin-bottom:8px;}
+.hasil-card p{color:var(--text2);font-size:15px;margin-bottom:28px;}
+.hasil-score{background:var(--bg3);border:1px solid var(--border);border-radius:12px;padding:24px;margin-bottom:24px;}
+.hasil-score .big{font-family:'DM Mono',monospace;font-size:56px;color:var(--accent);font-weight:500;line-height:1;}
+.hasil-score .of{font-size:14px;color:var(--text2);margin-top:4px;}
+.kategori-badge{display:inline-block;background:rgba(232,201,122,.15);color:var(--accent);border:1px solid rgba(232,201,122,.4);border-radius:100px;padding:6px 20px;font-size:14px;font-weight:600;margin-bottom:24px;}
+
+/* Notif */
+.notif{position:fixed;bottom:24px;right:24px;background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;font-size:13px;max-width:280px;transform:translateY(100px);opacity:0;transition:all .3s;z-index:999;}
+.notif.show{transform:translateY(0);opacity:1;}
+.notif.warn{border-left:3px solid var(--red);}
+.notif.ok{border-left:3px solid var(--green);}
+
+/* Connection indicator */
+.conn-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;}
+.conn-dot.connected{background:var(--green);}
+.conn-dot.disconnected{background:var(--red);animation:pulse 1s infinite;}
+.conn-dot.connecting{background:var(--accent);animation:pulse .5s infinite;}
+
+/* Empty cam placeholder */
+.cam-empty{grid-column:1/-1;background:var(--bg3);border:1px dashed var(--border);border-radius:10px;padding:48px;text-align:center;color:var(--text2);}
+.cam-empty .big-icon{font-size:48px;margin-bottom:12px;}
+</style>
+</head>
+<body>
+
+<!-- ═══ LANDING ═══ -->
+<div id="pg-landing" class="page active center">
+  <div class="logo-badge"><div class="logo-dot">🧠</div><span>PsikoTest Pro</span></div>
+  <h1>Psikotes <em>Real-Time</em><br>Terpantau</h1>
+  <p class="subtitle">Platform psikotes dengan pemantauan kamera WebRTC live antar device. Pengawas bisa memantau dari mana saja.</p>
+  <div class="role-cards">
+    <div class="role-card" onclick="gotoPage('pg-peserta-form')">
+      <div class="icon">📝</div>
+      <h3>Peserta Tes</h3>
+      <p>Ikuti psikotes dengan kamera aktif dipantau pengawas secara langsung</p>
+      <span class="arrow">→</span>
+    </div>
+    <div class="role-card" onclick="gotoPage('pg-admin-login')">
+      <div class="icon">🔍</div>
+      <h3>Pengawas / Admin</h3>
+      <p>Pantau semua peserta via kamera WebRTC real-time dari jarak jauh</p>
+      <span class="arrow">→</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PESERTA FORM ═══ -->
+<div id="pg-peserta-form" class="page center">
+  <div class="form-card">
+    <h2>Daftar Tes</h2>
+    <p class="sub">Isi data diri lalu kamera akan aktif untuk pengawasan</p>
+    <label>Nama Lengkap</label>
+    <input type="text" id="inp-nama" placeholder="Masukkan nama lengkap">
+    <label>Kode Peserta</label>
+    <input type="text" id="inp-kode" placeholder="Contoh: PSK-001" style="text-transform:uppercase">
+    <label>Room ID</label>
+    <input type="text" id="inp-room" placeholder="Tanyakan ke pengawas" value="ROOM-001">
+    <label>Kode Akses</label>
+    <input type="password" id="inp-akses" placeholder="Dari pengawas">
+    <button class="btn" onclick="pesertaJoin()">Mulai & Aktifkan Kamera →</button>
+    <button class="btn btn-ghost" onclick="gotoPage('pg-landing')">← Kembali</button>
+    <p style="font-size:12px;color:var(--text2);margin-top:14px;text-align:center;">Kode akses default: <code style="color:var(--accent)">TES2024</code></p>
+  </div>
+</div>
+
+<!-- ═══ TES ═══ -->
+<div id="pg-tes" class="page">
+  <div class="tes-header">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <div class="cam-pip">
+        <video id="cam-self" autoplay muted playsinline></video>
+        <div class="cam-label"><span class="rec-dot"></span>LIVE</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--text2);">Peserta</div>
+        <div id="lbl-nama" style="font-weight:600;font-size:15px;">—</div>
+      </div>
+    </div>
+    <div id="timer-box" class="timer-box">45:00</div>
+    <div style="font-size:12px;color:var(--text2);text-align:right;">
+      <div id="lbl-kode" style="font-family:'DM Mono',monospace;color:var(--accent);">—</div>
+      <div id="ws-status" style="font-size:11px;"><span class="conn-dot connecting" id="ws-dot"></span>Menghubungkan...</div>
+    </div>
+  </div>
+  <div class="progress-wrap">
+    <div class="progress-info">
+      <span id="q-counter">Soal 1 dari 20</span>
+      <span id="q-answered">0 dijawab</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+  </div>
+  <div class="question-area">
+    <div id="q-meta" class="q-meta">—</div>
+    <div id="q-text" class="q-text">Memuat soal...</div>
+    <div id="q-opts" class="options"></div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn btn-ghost" id="btn-prev" onclick="prevSoal()" style="display:none;">← Prev</button>
+    <button class="btn" id="btn-next" onclick="nextSoal()">Selanjutnya →</button>
+    <button class="btn" id="btn-submit" onclick="submitTes()" style="display:none;background:var(--green);color:#0d0f14;">✓ Kirim</button>
+  </div>
+</div>
+
+<!-- ═══ HASIL ═══ -->
+<div id="pg-hasil" class="page">
+  <div class="hasil-card">
+    <div class="hasil-icon">🎯</div>
+    <h2>Tes Selesai!</h2>
+    <p id="p-hasil-nama">Terima kasih!</p>
+    <div class="hasil-score">
+      <div class="big" id="p-skor">—</div>
+      <div class="of" id="p-total">—</div>
+    </div>
+    <div class="kategori-badge" id="p-kategori">—</div>
+    <p>Hasil sudah dikirim ke pengawas. Terima kasih atas partisipasi Anda.</p>
+    <button class="btn" onclick="gotoPage('pg-landing')" style="margin-top:16px;">Selesai</button>
+  </div>
+</div>
+
+<!-- ═══ ADMIN LOGIN ═══ -->
+<div id="pg-admin-login" class="page center">
+  <div class="form-card">
+    <h2>Admin Panel</h2>
+    <p class="sub">Masuk sebagai pengawas</p>
+    <label>Room ID</label>
+    <input type="text" id="adm-room" placeholder="Room yang akan dipantau" value="ROOM-001">
+    <label>Password Admin</label>
+    <input type="password" id="adm-pass" placeholder="••••••••" value="admin123">
+    <button class="btn" onclick="adminLogin()">Masuk sebagai Pengawas →</button>
+    <button class="btn btn-ghost" onclick="gotoPage('pg-landing')">← Kembali</button>
+    <p style="font-size:12px;color:var(--text2);margin-top:14px;text-align:center;">Default password: <code style="color:var(--accent)">admin123</code></p>
+  </div>
+</div>
+
+<!-- ═══ ADMIN ═══ -->
+<div id="pg-admin" class="page">
+  <div class="admin-header">
+    <div style="display:flex;align-items:center;gap:16px;">
+      <span style="font-size:20px;">🧠</span>
+      <h2>Admin Panel</h2>
+      <div id="adm-ws-status" style="font-size:12px;color:var(--text2);"><span class="conn-dot connecting" id="adm-dot"></span>Menghubungkan...</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="status-badge"><span class="status-dot"></span><span id="adm-room-label">Room —</span></div>
+      <button class="btn btn-danger" onclick="adminLogout()" style="width:auto;padding:8px 16px;font-size:13px;">Keluar</button>
+    </div>
+  </div>
+  <div class="admin-body">
+    <div class="admin-main">
+      <div class="stats-row">
+        <div class="stat-card"><div class="val" id="st-active">0</div><div class="lbl">Peserta Aktif</div></div>
+        <div class="stat-card"><div class="val" id="st-done">0</div><div class="lbl">Selesai</div></div>
+        <div class="stat-card"><div class="val" id="st-warn">0</div><div class="lbl">Peringatan</div></div>
+      </div>
+      <div class="section-title">📹 Live Camera Feed</div>
+      <div class="cam-grid" id="cam-grid">
+        <div class="cam-empty"><div class="big-icon">📷</div><div>Menunggu peserta bergabung...</div><div style="font-size:12px;margin-top:6px;">Feed kamera WebRTC akan muncul saat peserta terhubung</div></div>
+      </div>
+      <div class="section-title" style="margin-top:28px;">📋 Log Aktivitas</div>
+      <div class="log-list" id="log-list"></div>
+    </div>
+    <div class="admin-sidebar">
+      <div class="section-title">👤 Peserta</div>
+      <div id="peserta-list"><div style="color:var(--text2);font-size:13px;">Belum ada peserta.</div></div>
+      <div class="section-title" style="margin-top:24px;">🔑 Kode Akses Tes</div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;font-family:'DM Mono',monospace;font-size:16px;color:var(--accent);letter-spacing:.1em;text-align:center;margin-bottom:8px;">TES2024</div>
+      <p style="font-size:12px;color:var(--text2);">Bagikan ke peserta bersama Room ID di atas.</p>
+      <div class="section-title" style="margin-top:24px;">📡 Info Koneksi</div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px;font-size:12px;color:var(--text2);line-height:1.8;">
+        <div>Room: <span id="info-room" style="color:var(--accent);">—</span></div>
+        <div>Server: <span id="info-server" style="color:var(--accent);">—</span></div>
+        <div>Protokol: <span style="color:var(--accent);">WebRTC + WebSocket</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Notif -->
+<div class="notif" id="notif"></div>
+
+<script>
+// ═══ CONFIG ══════════════════════════════════
+const SERVER_URL = window.location.protocol === 'https:'
+  ? `wss://${window.location.host}`
+  : `ws://${window.location.host}`;
+
+const ICE_SERVERS = [
+  { urls: 'stun:stun.l.google.com:19302' },
+  { urls: 'stun:stun1.l.google.com:19302' },
+  { urls: 'stun:stun2.l.google.com:19302' },
+];
+
+// ═══ SOAL BANK ════════════════════════════════
+const SOAL = [
+  {b:'Verbal',q:'Antonim kata "OPTIMIS" adalah...',o:['Pesimis','Realistis','Egois','Apatis'],j:0},
+  {b:'Verbal',q:'"BUKU" : "PERPUSTAKAAN" = "LUKISAN" : ...',o:['Seniman','Galeri','Cat','Kanvas'],j:1},
+  {b:'Verbal',q:'Manakah yang TIDAK termasuk kelompok yang sama?',o:['Merah','Biru','Hijau','Persegi'],j:3},
+  {b:'Verbal',q:'Sinonim kata "AMBIGU" adalah...',o:['Jelas','Tegas','Bermakna ganda','Lugas'],j:2},
+  {b:'Verbal',q:'Kata yang bermakna "rajin dan tekun" adalah...',o:['Apatis','Giat','Malas','Pasif'],j:1},
+  {b:'Numerik',q:'Jika 3x + 7 = 22, nilai x adalah...',o:['4','5','6','7'],j:1},
+  {b:'Numerik',q:'Deret: 2, 4, 8, 16, ... Angka selanjutnya?',o:['24','28','32','36'],j:2},
+  {b:'Numerik',q:'Rata-rata dari 15, 20, 25, 30, 35 adalah...',o:['23','24','25','26'],j:2},
+  {b:'Numerik',q:'Diskon 20% dari Rp 150.000 menghasilkan harga...',o:['Rp 100.000','Rp 110.000','Rp 120.000','Rp 130.000'],j:2},
+  {b:'Numerik',q:'Fibonacci: 1,1,2,3,5,8,... Lanjutannya?',o:['11','12','13','14'],j:2},
+  {b:'Logika',q:'Semua A adalah B. Sebagian C adalah A. Maka...',o:['Semua C adalah B','Sebagian C adalah B','Tidak ada C yang B','Semua B adalah C'],j:1},
+  {b:'Logika',q:'Jika hujan maka basah. Tidak basah. Maka...',o:['Hujan','Tidak hujan','Mungkin hujan','Tidak dapat disimpulkan'],j:1},
+  {b:'Logika',q:'Sebuah kubus memiliki 6 sisi. 4 kubus memiliki berapa sisi?',o:['18','20','24','28'],j:2},
+  {b:'Logika',q:'Angka ganjil=G, genap=E. Urutan 3,6,9,12 adalah...',o:['G-G-E-E','G-E-G-E','E-G-E-G','G-G-G-E'],j:1},
+  {b:'Logika',q:'Jika semua dokter adalah sarjana, dan Budi adalah dokter, maka...',o:['Budi bukan sarjana','Budi adalah sarjana','Belum tentu Budi sarjana','Semua sarjana adalah dokter'],j:1},
+  {b:'Kepribadian',q:'Menghadapi masalah sulit, saya cenderung...',o:['Cari bantuan segera','Analisis sendiri dulu','Hindari masalah','Menyalahkan situasi'],j:1},
+  {b:'Kepribadian',q:'Dalam kerja tim saya berperan sebagai...',o:['Pemimpin','Pendukung','Pengamat','Individu mandiri'],j:0},
+  {b:'Kepribadian',q:'Menerima kritik, reaksi pertama saya...',o:['Membela diri','Terbuka dan pertimbangkan','Tersinggung','Mengabaikan'],j:1},
+  {b:'Kepribadian',q:'Saya paling efektif saat...',o:['Deadline ketat','Ada perencanaan matang','Sendiri tanpa gangguan','Berkolaborasi'],j:1},
+  {b:'Kepribadian',q:'Motivasi terbesar bekerja adalah...',o:['Penghasilan tinggi','Pengembangan diri','Pengakuan sosial','Stabilitas karir'],j:1},
+];
+
+// ═══ STATE ═══════════════════════════════════
+let ws = null;
+let localStream = null;
+let peerConn = null;           // peserta side — satu peer ke admin
+let adminPeers = {};           // admin side — { kode: RTCPeerConnection }
+let pendingOffers = {};        // admin side — offer masuk sebelum peer siap { kode: {offer,nama} }
+
+let state = {
+  role: null, nama: '', kode: '', roomId: '',
+  soalList: [], idx: 0, jawaban: {},
+  timerSec: 45*60, timerInt: null,
+  pesertaMap: {},
+  logs: [], warns: 0, done: 0,
+};
+
+// ═══ UTILS ════════════════════════════════════
+function gotoPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function showNotif(msg, type='ok') {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.className = `notif show ${type}`;
+  setTimeout(() => el.className = 'notif', 3200);
+}
+
+function nowTime() {
+  return new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+function wsSend(obj) {
+  if(ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify(obj));
+}
+
+// ═══ WEBSOCKET ════════════════════════════════
+function connectWS(onOpen) {
+  ws = new WebSocket(SERVER_URL);
+  ws.onopen = () => { console.log('WS connected'); onOpen && onOpen(); };
+  ws.onmessage = (e) => handleMessage(JSON.parse(e.data));
+  ws.onclose = () => { console.log('WS closed'); updateConnStatus(false); };
+  ws.onerror = (e) => { console.error('WS error', e); };
+}
+
+function updateConnStatus(ok) {
+  ['ws-status','adm-ws-status'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.innerHTML = `<span class="conn-dot ${ok?'connected':'disconnected'}"></span>${ok?'Terhubung':'Terputus'}`;
+  });
+}
+
+// ═══ MESSAGE HANDLER ══════════════════════════
+async function handleMessage(msg) {
+  const {type} = msg;
+  if(type==='error') { showNotif(msg.message,'warn'); return; }
+
+  // ── PESERTA SIDE ──
+  if(type==='peserta-joined') {
+    updateConnStatus(true);
+    showNotif('Terhubung ke server!','ok');
+    // Jika admin sudah online saat peserta join (server kirim flag)
+    if(msg.adminOnline) await pesertaKirimOffer();
+  }
+
+  if(type==='admin-online') {
+    // Admin baru masuk, peserta kirim offer
+    await pesertaKirimOffer();
+  }
+
+  if(type==='webrtc-answer' && peerConn) {
+    try {
+      await peerConn.setRemoteDescription(new RTCSessionDescription(msg.answer));
+      console.log('Remote description set OK');
+    } catch(e) { console.error('setRemoteDescription error:', e); }
+  }
+
+  if(type==='ice-candidate' && peerConn) {
+    try {
+      if(msg.candidate) await peerConn.addIceCandidate(new RTCIceCandidate(msg.candidate));
+    } catch(e) { console.warn('addIceCandidate error:', e); }
+  }
+
+  // ── ADMIN SIDE ──
+  if(type==='admin-joined') {
+    updateConnStatus(true);
+    addAdminLog('Admin terhubung ke server','ok');
+    showNotif('Terhubung ke server!','ok');
+    // Server kirim daftar peserta yang sudah ada
+    if(msg.pesertaList && msg.pesertaList.length) {
+      for(const p of msg.pesertaList) {
+        state.pesertaMap[p.kode] = { nama:p.nama, kode:p.kode, jawaban:0, total:20, progress:0, mulai:nowTime() };
+        addAdminLog(`Peserta "${p.nama}" sudah ada di room`,'info');
+        await createAdminPeer(p.kode, p.nama);
+        // Minta peserta kirim offer ulang
+        wsSend({ type:'request-offer', to: p.kode });
+      }
+      updateAdminUI();
+    }
+  }
+
+  if(type==='peserta-connected') {
+    const {kode, nama} = msg;
+    if(!state.pesertaMap[kode]) {
+      state.pesertaMap[kode] = { nama, kode, jawaban:0, total:20, progress:0, mulai:nowTime() };
+    }
+    addAdminLog(`Peserta "${nama}" (${kode}) bergabung`,'ok');
+    updateAdminUI();
+    // Buat peer dulu, baru proses offer yang mungkin sudah pending
+    await createAdminPeer(kode, nama);
+    // Proses pending offer kalau ada
+    if(pendingOffers[kode]) {
+      const {offer, nama:n} = pendingOffers[kode];
+      delete pendingOffers[kode];
+      await adminHandleOffer(kode, n, offer);
+    }
+  }
+
+  if(type==='peserta-disconnected') {
+    addAdminLog(`Peserta "${msg.nama}" terputus`,'warn');
+    if(state.pesertaMap[msg.kode]) state.pesertaMap[msg.kode].offline = true;
+    updateAdminUI();
+    const feed = document.getElementById(`feed-${msg.kode}`);
+    if(feed) {
+      const badge = feed.querySelector('.cam-badge');
+      if(badge) { badge.className='cam-badge offline'; badge.innerHTML='OFFLINE'; }
+    }
+  }
+
+  if(type==='webrtc-offer' && state.role==='admin') {
+    const {offer, from, nama} = msg;
+    if(adminPeers[from]) {
+      // Peer sudah siap, langsung proses
+      await adminHandleOffer(from, nama, offer);
+    } else {
+      // Peer belum siap, simpan dulu
+      console.log(`Queuing offer from ${from}`);
+      pendingOffers[from] = { offer, nama };
+    }
+  }
+
+  if(type==='ice-candidate' && state.role==='admin') {
+    const pc = adminPeers[msg.from];
+    if(pc) {
+      try {
+        if(msg.candidate) await pc.addIceCandidate(new RTCIceCandidate(msg.candidate));
+      } catch(e) { console.warn('Admin addIceCandidate:', e); }
+    }
+  }
+
+  if(type==='event-log') {
+    addAdminLog(`⚠️ ${msg.nama}: ${msg.event}`, msg.level||'warn');
+    if(msg.level==='warn') { state.warns++; updateAdminStats(); }
+  }
+
+  if(type==='hasil-tes') {
+    const {kode, nama, skor, benar, total, kategori} = msg;
+    state.done++;
+    if(state.pesertaMap[kode]) { state.pesertaMap[kode].skor=skor; state.pesertaMap[kode].progress=100; }
+    addAdminLog(`✅ ${nama} selesai — Skor: ${skor}% (${kategori})`,'ok');
+    updateAdminUI();
+  }
+
+  if(type==='progress-update') {
+    const {kode, jawaban, progress} = msg;
+    if(state.pesertaMap[kode]) {
+      state.pesertaMap[kode].jawaban = jawaban;
+      state.pesertaMap[kode].progress = progress;
+      updatePesertaList();
+    }
+  }
+}
+
+// ═══ WEBRTC — PESERTA ═════════════════════════
+async function pesertaKirimOffer() {
+  try {
+    // Tutup peer lama kalau ada
+    if(peerConn) { peerConn.close(); peerConn = null; }
+
+    peerConn = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+
+    if(localStream) {
+      localStream.getTracks().forEach(t => peerConn.addTrack(t, localStream));
+    }
+
+    // Buffer ICE candidates sampai offer terkirim
+    const iceCandidates = [];
+    let offerSent = false;
+
+    peerConn.onicecandidate = (e) => {
+      if(!e.candidate) return;
+      if(offerSent) {
+        wsSend({ type:'ice-candidate', candidate: e.candidate });
+      } else {
+        iceCandidates.push(e.candidate);
+      }
+    };
+
+    peerConn.onconnectionstatechange = () => {
+      console.log('Peer state:', peerConn.connectionState);
+      if(peerConn.connectionState==='connected') {
+        showNotif('Kamera berhasil terhubung ke pengawas! ✅','ok');
+        wsSend({ type:'event-log', event:'Kamera WebRTC terhubung ke pengawas', level:'info' });
+      }
+      if(peerConn.connectionState==='failed') {
+        showNotif('Koneksi kamera gagal, mencoba ulang...','warn');
+        setTimeout(() => pesertaKirimOffer(), 3000);
+      }
+    };
+
+    const offer = await peerConn.createOffer({ offerToReceiveVideo: false, offerToReceiveAudio: false });
+    await peerConn.setLocalDescription(offer);
+    wsSend({ type:'webrtc-offer', offer });
+    offerSent = true;
+
+    // Kirim ICE candidates yang tertahan
+    iceCandidates.forEach(c => wsSend({ type:'ice-candidate', candidate: c }));
+
+    console.log('Offer sent to admin');
+  } catch(e) {
+    console.error('pesertaKirimOffer error:', e);
+  }
+}
+
+// ═══ WEBRTC — ADMIN ═══════════════════════════
+async function createAdminPeer(kode, nama) {
+  // Tutup peer lama kalau ada
+  if(adminPeers[kode]) { adminPeers[kode].close(); }
+
+  const pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
+  adminPeers[kode] = pc;
+
+  pc.onicecandidate = (e) => {
+    if(e.candidate) wsSend({ type:'ice-candidate', candidate: e.candidate, to: kode });
+  };
+
+  pc.ontrack = (e) => {
+    console.log('Got track from', nama, e.streams);
+    if(e.streams && e.streams[0]) {
+      addCamFeedAdmin(kode, nama, e.streams[0]);
+    }
+  };
+
+  pc.onconnectionstatechange = () => {
+    console.log(`Peer [${nama}]: ${pc.connectionState}`);
+    if(pc.connectionState==='connected') {
+      addAdminLog(`📹 Kamera "${nama}" terhubung live`,'ok');
+    }
+    if(pc.connectionState==='failed') {
+      addAdminLog(`Kamera "${nama}" gagal — peserta perlu refresh`,'warn');
+    }
+  };
+
+  return pc;
+}
+
+async function adminHandleOffer(kode, nama, offer) {
+  const pc = adminPeers[kode];
+  if(!pc) { console.warn('No peer for', kode); return; }
+  try {
+    await pc.setRemoteDescription(new RTCSessionDescription(offer));
+    const answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    wsSend({ type:'webrtc-answer', answer, to: kode });
+    console.log('Answer sent to', kode);
+  } catch(e) {
+    console.error('adminHandleOffer error:', e);
+  }
+}
+
+// ═══ KAMERA ═══════════════════════════════════
+async function startLocalCamera() {
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video:{ width:{ideal:640}, height:{ideal:480}, facingMode:'user' },
+      audio: false
+    });
+    document.getElementById('cam-self').srcObject = localStream;
+    return true;
+  } catch(e) {
+    console.warn('Camera error:', e);
+    showNotif('Kamera tidak dapat diakses. Tes tetap bisa dilanjutkan.','warn');
+    return false;
+  }
+}
+
+// ═══ PESERTA FLOW ══════════════════════════════
+async function pesertaJoin() {
+  const nama = document.getElementById('inp-nama').value.trim();
+  const kode = document.getElementById('inp-kode').value.trim().toUpperCase();
+  const roomId = document.getElementById('inp-room').value.trim().toUpperCase();
+  const akses = document.getElementById('inp-akses').value.trim();
+
+  if(!nama||!kode||!roomId) { showNotif('Isi semua field!','warn'); return; }
+  if(akses.toUpperCase()!=='TES2024') { showNotif('Kode akses salah!','warn'); return; }
+
+  state.nama=nama; state.kode=kode; state.roomId=roomId; state.role='peserta';
+  state.soalList=[...SOAL].sort(()=>Math.random()-.5);
+  state.idx=0; state.jawaban={};
+
+  await startLocalCamera();
+
+  document.getElementById('lbl-nama').textContent = nama;
+  document.getElementById('lbl-kode').textContent = kode;
+  gotoPage('pg-tes');
+  startTimer();
+  renderSoal();
+
+  connectWS(() => {
+    wsSend({ type:'peserta-join', roomId, nama, kode });
+  });
+
+  document.addEventListener('visibilitychange', () => {
+    if(!document.getElementById('pg-tes').classList.contains('active')) return;
+    if(document.hidden) {
+      wsSend({ type:'event-log', event:'Peserta berpindah tab/window!', level:'warn' });
+      showNotif('Jangan berpindah tab!','warn');
+    }
+  });
+}
+
+// ═══ ADMIN FLOW ═══════════════════════════════
+async function adminLogin() {
+  const roomId = document.getElementById('adm-room').value.trim().toUpperCase();
+  const pass = document.getElementById('adm-pass').value;
+  if(!roomId) { showNotif('Masukkan Room ID!','warn'); return; }
+
+  state.role='admin'; state.roomId=roomId;
+  document.getElementById('adm-room-label').textContent = `Room ${roomId}`;
+  document.getElementById('info-room').textContent = roomId;
+  document.getElementById('info-server').textContent = window.location.host;
+
+  gotoPage('pg-admin');
+
+  connectWS(() => {
+    wsSend({ type:'admin-join', roomId, password:pass });
+  });
+}
+
+function adminLogout() {
+  if(ws) ws.close();
+  Object.values(adminPeers).forEach(pc => pc.close());
+  adminPeers = {};
+  pendingOffers = {};
+  gotoPage('pg-landing');
+}
+
+// ═══ CAM FEED ADMIN ═══════════════════════════
+function addCamFeedAdmin(kode, nama, stream) {
+  const grid = document.getElementById('cam-grid');
+  const empty = grid.querySelector('.cam-empty');
+  if(empty) empty.remove();
+
+  let div = document.getElementById(`feed-${kode}`);
+  if(!div) {
+    div = document.createElement('div');
+    div.className = 'cam-feed';
+    div.id = `feed-${kode}`;
+    grid.appendChild(div);
+  }
+
+  // Bersihkan isi lama
+  div.innerHTML = '';
+
+  const video = document.createElement('video');
+  video.autoplay = true;
+  video.playsInline = true;
+  video.muted = true; // muted dulu, klik untuk unmute
+  video.srcObject = stream;
+  video.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block;';
+  div.appendChild(video);
+
+  // Play paksa
+  video.play().catch(e => console.warn('video.play():', e));
+
+  const overlay = document.createElement('div');
+  overlay.className = 'cam-overlay';
+  overlay.innerHTML = `
+    <span class="cam-name">${nama} <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text2);">${kode}</span></span>
+    <span class="cam-badge live"><span class="rec-dot"></span>LIVE</span>`;
+  div.appendChild(overlay);
+
+  console.log('Camera feed added for', nama);
+}
+
+// ═══ ADMIN UI ═════════════════════════════════
+function addAdminLog(msg, type='info') {
+  state.logs.unshift({ msg, type, time:nowTime() });
+  if(state.logs.length>50) state.logs.pop();
+  renderLog();
+}
+
+function renderLog() {
+  const el = document.getElementById('log-list');
+  if(!el) return;
+  el.innerHTML = state.logs.map(l =>
+    `<div class="log-item log-${l.type}">
+      <span class="log-time">${l.time}</span>
+      <span>${l.msg}</span>
+    </div>`).join('');
+}
+
+function updateAdminStats() {
+  const active = Object.values(state.pesertaMap).filter(p=>!p.offline&&!p.selesai).length;
+  document.getElementById('st-active').textContent = active;
+  document.getElementById('st-done').textContent = state.done;
+  document.getElementById('st-warn').textContent = state.warns;
+}
+
+function updatePesertaList() {
+  const el = document.getElementById('peserta-list');
+  if(!el) return;
+  const list = Object.values(state.pesertaMap);
+  if(!list.length) { el.innerHTML='<div style="color:var(--text2);font-size:13px;">Belum ada peserta.</div>'; return; }
+  el.innerHTML = list.map(p=>`
+    <div class="peserta-item">
+      <div class="name">${p.nama} ${p.offline?'<span style="color:var(--red);font-size:10px;">● OFFLINE</span>':p.skor!==undefined?'<span style="color:var(--green);font-size:10px;">✓ Selesai</span>':'<span style="color:var(--green);font-size:10px;">● Live</span>'}</div>
+      <div class="detail">${p.kode} · Mulai: ${p.mulai}</div>
+      <div class="detail">${p.jawaban||0}/${p.total} dijawab${p.skor!==undefined?' · Skor: '+p.skor+'%':''}</div>
+      <div class="pp-bar"><div class="pp-fill" style="width:${p.progress||0}%"></div></div>
+    </div>`).join('');
+}
+
+function updateAdminUI() {
+  updateAdminStats();
+  updatePesertaList();
+}
+
+// ═══ SOAL ══════════════════════════════════════
+function renderSoal() {
+  const s = state.soalList[state.idx];
+  const total = state.soalList.length;
+  document.getElementById('q-meta').textContent = `Bagian — ${s.b}`;
+  document.getElementById('q-text').textContent = s.q;
+  document.getElementById('q-counter').textContent = `Soal ${state.idx+1} dari ${total}`;
+  document.getElementById('q-answered').textContent = `${Object.keys(state.jawaban).length} dijawab`;
+  document.getElementById('prog-fill').style.width = `${((state.idx+1)/total)*100}%`;
+
+  const opts = document.getElementById('q-opts');
+  opts.innerHTML = '';
+  s.o.forEach((opt, oi) => {
+    const div = document.createElement('div');
+    div.className = 'option'+(state.jawaban[state.idx]===oi?' selected':'');
+    div.innerHTML = `<span class="option-letter">${'ABCD'[oi]}</span><span>${opt}</span>`;
+    div.onclick = () => pilih(oi);
+    opts.appendChild(div);
+  });
+
+  document.getElementById('btn-prev').style.display = state.idx>0?'block':'none';
+  document.getElementById('btn-next').style.display = state.idx<total-1?'block':'none';
+  document.getElementById('btn-submit').style.display = state.idx===total-1?'block':'none';
+}
+
+function pilih(oi) {
+  state.jawaban[state.idx] = oi;
+  renderSoal();
+  // Kirim progress ke admin
+  wsSend({
+    type:'progress-update',
+    jawaban: Object.keys(state.jawaban).length,
+    progress: Math.round((state.idx/state.soalList.length)*100)
+  });
+}
+
+function nextSoal() { if(state.idx<state.soalList.length-1){state.idx++;renderSoal();} }
+function prevSoal() { if(state.idx>0){state.idx--;renderSoal();} }
+
+function submitTes() {
+  const sisa = state.soalList.length - Object.keys(state.jawaban).length;
+  if(sisa>0 && !confirm(`Masih ${sisa} soal kosong. Kirim sekarang?`)) return;
+  selesai();
+}
+
+function selesai() {
+  clearInterval(state.timerInt);
+  if(localStream) localStream.getTracks().forEach(t=>t.stop());
+  if(peerConn) peerConn.close();
+
+  let benar = 0;
+  state.soalList.forEach((s,i) => { if(state.jawaban[i]===s.j) benar++; });
+  const total = state.soalList.length;
+  const pct = Math.round((benar/total)*100);
+  const kat = pct>=80?'Sangat Baik':pct>=60?'Baik':pct>=40?'Cukup':'Perlu Peningkatan';
+
+  wsSend({ type:'hasil-tes', skor:pct, benar, total, kategori:kat });
+
+  document.getElementById('p-hasil-nama').textContent = `Terima kasih, ${state.nama}!`;
+  document.getElementById('p-skor').textContent = `${pct}%`;
+  document.getElementById('p-total').textContent = `${benar} dari ${total} soal benar`;
+  document.getElementById('p-kategori').textContent = kat;
+
+  gotoPage('pg-hasil');
+}
+
+// ═══ TIMER ════════════════════════════════════
+function startTimer() {
+  const box = document.getElementById('timer-box');
+  clearInterval(state.timerInt);
+  state.timerInt = setInterval(() => {
+    state.timerSec--;
+    const m = Math.floor(state.timerSec/60);
+    const s = state.timerSec%60;
+    box.textContent = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+    if(state.timerSec<=300) box.className='timer-box urgent';
+    if(state.timerSec<=0) { clearInterval(state.timerInt); showNotif('Waktu habis!','warn'); selesai(); }
+  },1000);
+}
+</script>
+</body>
+</html>

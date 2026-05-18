@@ -9,144 +9,101 @@ const wss = new WebSocketServer({ server });
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ── State ──
-const rooms = {}; // roomId -> { admin: ws, peserta: { id: ws } }
-const clients = new Map(); // ws -> { role, roomId, id, nama }
+const rooms = {};
+const clients = new Map();
 
-function broadcast(ws, data) {
+function send(ws, data) {
   if (ws && ws.readyState === 1) ws.send(JSON.stringify(data));
 }
 
-function getRoomAdmin(roomId) {
-  return rooms[roomId]?.admin || null;
-}
-
-function getAdminInfo(roomId) {
-  for (const [ws, info] of clients.entries()) {
-    if (info.role === 'admin' && info.roomId === roomId) return { ws, info };
-  }
-  return null;
-}
-
 wss.on('connection', (ws) => {
-  console.log('Client connected');
+  console.log('[+] Client connected, total:', wss.clients.size);
 
   ws.on('message', (raw) => {
     let msg;
     try { msg = JSON.parse(raw); } catch { return; }
-
     const { type } = msg;
 
-    // ── Admin join ──
     if (type === 'admin-join') {
       const { roomId, password } = msg;
-      if (password !== 'admin123') {
-        broadcast(ws, { type: 'error', message: 'Password salah' });
-        return;
-      }
+      if (password !== 'admin123') { send(ws, { type: 'error', message: 'Password salah' }); return; }
       if (!rooms[roomId]) rooms[roomId] = { admin: null, peserta: {} };
       rooms[roomId].admin = ws;
       clients.set(ws, { role: 'admin', roomId });
-      broadcast(ws, { type: 'admin-joined', roomId });
-      console.log(`Admin joined room: ${roomId}`);
-
-      // Beritahu semua peserta di room bahwa admin aktif
-      for (const [pid, pws] of Object.entries(rooms[roomId].peserta)) {
-        broadcast(pws, { type: 'admin-online' });
+      console.log(`[Admin] joined room: ${roomId}`);
+      const pesertaList = Object.entries(rooms[roomId].peserta).map(([kode, pws]) => {
+        const info = clients.get(pws);
+        return { kode, nama: info?.nama || kode };
+      });
+      send(ws, { type: 'admin-joined', roomId, pesertaList });
+      for (const [kode, pws] of Object.entries(rooms[roomId].peserta)) {
+        send(pws, { type: 'admin-online' });
       }
     }
 
-    // ── Peserta join ──
     if (type === 'peserta-join') {
       const { roomId, nama, kode } = msg;
       if (!rooms[roomId]) rooms[roomId] = { admin: null, peserta: {} };
       rooms[roomId].peserta[kode] = ws;
       clients.set(ws, { role: 'peserta', roomId, id: kode, nama });
-      broadcast(ws, { type: 'peserta-joined', kode });
-      console.log(`Peserta joined: ${nama} (${kode}) in room: ${roomId}`);
-
-      // Beritahu admin ada peserta baru
-      const adminWs = rooms[roomId].admin;
-      if (adminWs) {
-        broadcast(adminWs, { type: 'peserta-connected', kode, nama });
-      }
+      console.log(`[Peserta] joined: ${nama} (${kode}) room: ${roomId}`);
+      const adminOnline = !!rooms[roomId].admin;
+      send(ws, { type: 'peserta-joined', kode, adminOnline });
+      if (rooms[roomId].admin) send(rooms[roomId].admin, { type: 'peserta-connected', kode, nama });
     }
 
-    // ── WebRTC Signaling: Peserta kirim offer ke Admin ──
+    if (type === 'request-offer') {
+      const info = clients.get(ws);
+      if (!info) return;
+      const targetWs = rooms[info.roomId]?.peserta[msg.to];
+      if (targetWs) { send(targetWs, { type: 'admin-online' }); console.log(`[Server] Requested offer from ${msg.to}`); }
+    }
+
     if (type === 'webrtc-offer') {
       const info = clients.get(ws);
       if (!info) return;
       const adminWs = rooms[info.roomId]?.admin;
-      if (adminWs) {
-        broadcast(adminWs, {
-          type: 'webrtc-offer',
-          offer: msg.offer,
-          from: info.id,
-          nama: info.nama,
-        });
-      }
+      if (adminWs) { send(adminWs, { type: 'webrtc-offer', offer: msg.offer, from: info.id, nama: info.nama }); console.log(`[WebRTC] Offer from ${info.id}`); }
     }
 
-    // ── WebRTC Signaling: Admin kirim answer ke Peserta ──
     if (type === 'webrtc-answer') {
-      const { to, answer } = msg;
       const info = clients.get(ws);
       if (!info) return;
-      const targetWs = rooms[info.roomId]?.peserta[to];
-      if (targetWs) {
-        broadcast(targetWs, { type: 'webrtc-answer', answer });
-      }
+      const targetWs = rooms[info.roomId]?.peserta[msg.to];
+      if (targetWs) { send(targetWs, { type: 'webrtc-answer', answer: msg.answer }); }
     }
 
-    // ── ICE Candidate ──
     if (type === 'ice-candidate') {
-      const { candidate, to, from } = msg;
       const senderInfo = clients.get(ws);
       if (!senderInfo) return;
-
       if (senderInfo.role === 'peserta') {
-        // Peserta kirim ICE ke admin
         const adminWs = rooms[senderInfo.roomId]?.admin;
-        if (adminWs) broadcast(adminWs, { type: 'ice-candidate', candidate, from: senderInfo.id });
+        if (adminWs) send(adminWs, { type: 'ice-candidate', candidate: msg.candidate, from: senderInfo.id });
       } else if (senderInfo.role === 'admin') {
-        // Admin kirim ICE ke peserta
-        const targetWs = rooms[senderInfo.roomId]?.peserta[to];
-        if (targetWs) broadcast(targetWs, { type: 'ice-candidate', candidate });
+        const targetWs = rooms[senderInfo.roomId]?.peserta[msg.to];
+        if (targetWs) send(targetWs, { type: 'ice-candidate', candidate: msg.candidate });
       }
     }
 
-    // ── Log event dari peserta (pindah tab, dll) ──
+    if (type === 'progress-update') {
+      const info = clients.get(ws);
+      if (!info) return;
+      const adminWs = rooms[info.roomId]?.admin;
+      if (adminWs) send(adminWs, { type: 'progress-update', kode: info.id, jawaban: msg.jawaban, progress: msg.progress });
+    }
+
     if (type === 'event-log') {
       const info = clients.get(ws);
       if (!info) return;
       const adminWs = rooms[info.roomId]?.admin;
-      if (adminWs) {
-        broadcast(adminWs, {
-          type: 'event-log',
-          from: info.id,
-          nama: info.nama,
-          event: msg.event,
-          level: msg.level || 'info',
-        });
-      }
+      if (adminWs) send(adminWs, { type: 'event-log', from: info.id, nama: info.nama, event: msg.event, level: msg.level || 'info' });
     }
 
-    // ── Hasil tes ──
     if (type === 'hasil-tes') {
       const info = clients.get(ws);
       if (!info) return;
       const adminWs = rooms[info.roomId]?.admin;
-      if (adminWs) {
-        broadcast(adminWs, {
-          type: 'hasil-tes',
-          kode: info.id,
-          nama: info.nama,
-          skor: msg.skor,
-          benar: msg.benar,
-          total: msg.total,
-          kategori: msg.kategori,
-        });
-      }
+      if (adminWs) send(adminWs, { type: 'hasil-tes', kode: info.id, nama: info.nama, skor: msg.skor, benar: msg.benar, total: msg.total, kategori: msg.kategori });
     }
   });
 
@@ -154,21 +111,19 @@ wss.on('connection', (ws) => {
     const info = clients.get(ws);
     if (!info) return;
     const { role, roomId, id, nama } = info;
-
     if (role === 'peserta' && rooms[roomId]) {
       delete rooms[roomId].peserta[id];
-      const adminWs = rooms[roomId].admin;
-      if (adminWs) broadcast(adminWs, { type: 'peserta-disconnected', kode: id, nama });
-      console.log(`Peserta disconnected: ${nama}`);
+      if (rooms[roomId].admin) send(rooms[roomId].admin, { type: 'peserta-disconnected', kode: id, nama });
+      console.log(`[Peserta] disconnected: ${nama}`);
     }
-
     if (role === 'admin' && rooms[roomId]) {
       rooms[roomId].admin = null;
-      console.log(`Admin disconnected from room: ${roomId}`);
+      console.log(`[Admin] disconnected from room: ${roomId}`);
     }
-
     clients.delete(ws);
   });
+
+  ws.on('error', (e) => console.error('WS error:', e.message));
 });
 
 const PORT = process.env.PORT || 3000;
